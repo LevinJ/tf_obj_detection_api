@@ -21,10 +21,15 @@ def display_instances(batch):
     """
     # ADD CODE HERE
     return 
+import matplotlib.pyplot as plt
+fig=plt.figure()
+rows, columns = 5, 2
+i = 1
 def display_dataset(dataset):
     dataset = dataset.shuffle(100)
     dataset = dataset.take(10)
     for elem in dataset:
+        global i;
         img  = elem['image'].numpy()
         h, w, _c = img.shape 
         boxes = elem['groundtruth_boxes'].numpy()
@@ -33,11 +38,16 @@ def display_dataset(dataset):
         classes = elem['groundtruth_classes'].numpy()
         
         img = draw_detections(img.copy(), boxes, classes)
-        print("show image")
-        cv2.imshow('object detection', cv2.resize(img, (0,0), fx=0.5, fy=0.5)  )
-        if cv2.waitKey(2500) & 0xFF == ord('q'):
-            continue
-    cv2.destroyAllWindows()
+        print("show image{}".format(i))
+        fig.add_subplot(rows, columns, i)
+        plt.imshow(img)
+        i = i+ 1
+    plt.show()
+#         print("show image")
+#         cv2.imshow('object detection', cv2.resize(img, (0,0), fx=0.5, fy=0.5)  )
+#         if cv2.waitKey(2500) & 0xFF == ord('q'):
+#             continue
+#     cv2.destroyAllWindows()
     return
     
 display_dataset(dataset)   

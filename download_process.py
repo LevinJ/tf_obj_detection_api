@@ -121,6 +121,9 @@ def process_tfr(filepath, data_dir):
     dest = os.path.join(data_dir, 'processed')
     os.makedirs(dest, exist_ok=True)
     file_name = os.path.basename(filepath)
+    
+    if os.path.exists(f'{dest}/{file_name}'):
+        return
 
     logger.info(f'Processing {filepath}')
     writer = tf.python_io.TFRecordWriter(f'{dest}/{file_name}')
@@ -133,17 +136,18 @@ def process_tfr(filepath, data_dir):
         tf_example = create_tf_example(filename, encoded_jpeg, annotations)
         writer.write(tf_example.SerializeToString())
     writer.close()
+    return
 
 
-# @ray.remote
+@ray.remote
 def download_and_process(filename, temp_dir, data_dir):
     # need to re-import the logger because of multiprocesing
     logger = get_module_logger(__name__)
     local_path = download_tfr(filename, temp_dir)
     process_tfr(local_path, data_dir)
     # remove the original tf record to save space
-#     logger.info(f'Deleting {local_path}')
-#     os.remove(local_path)
+    logger.info(f'Deleting {local_path}')
+    os.remove(local_path)
 
 
 if __name__ == "__main__": 
@@ -162,12 +166,13 @@ if __name__ == "__main__":
     data_dir = args.data_dir
     temp_dir = args.temp_dir
     
-    download_and_process(filenames[0], temp_dir, data_dir)
+#     download_and_process(filenames[0], temp_dir, data_dir)
     # init ray
-#     ray.init(num_cpus=cpu_count())
-#  
-#     workers = [download_and_process.remote(fn, temp_dir, data_dir) for fn in filenames[:100]]
-#     _ = ray.get(workers)
+    ray.init(num_cpus=cpu_count())
+  
+    workers = [download_and_process.remote(fn, temp_dir, data_dir) for fn in filenames[:100]]
+    _ = ray.get(workers)
+    print("Done with downloading")
 
 
 
