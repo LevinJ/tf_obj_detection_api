@@ -142,6 +142,13 @@ def process_tfr(filepath, data_dir):
 @ray.remote
 def download_and_process(filename, temp_dir, data_dir):
     # need to re-import the logger because of multiprocesing
+    dest = os.path.join(data_dir, 'processed')
+    os.makedirs(dest, exist_ok=True)
+    file_name = os.path.basename(filename)
+    
+    if os.path.exists(f'{dest}/{file_name}'):
+        print("processed file  {} exists, skip".format(file_name))
+        return
     logger = get_module_logger(__name__)
     local_path = download_tfr(filename, temp_dir)
     process_tfr(local_path, data_dir)
