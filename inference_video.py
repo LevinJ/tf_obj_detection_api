@@ -105,8 +105,8 @@ if __name__ == "__main__":
                         help='path to the saved model folder')
     parser.add_argument('--tf_record_path', required=False, type=str, default="./data/test/segment-1208303279778032257_1360_000_1380_000_with_camera_labels.tfrecord",
                         help='path to the tf record file')
-    parser.add_argument('--config_path', required=False, type=str,
-                        default='pipeline.config', 
+    parser.add_argument('--config_path', required=False, type=str, 
+                        default='./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/pipeline.config', 
                         help='path to the config file')
     parser.add_argument('--output_path', required=False, type=str, 
                         default='./data/animation.mp4', 
