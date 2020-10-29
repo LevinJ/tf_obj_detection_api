@@ -99,17 +99,17 @@ if __name__ == "__main__":
     logger = get_module_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Create video')
-    parser.add_argument('--labelmap_path', required=True, type=str,
+    parser.add_argument('--labelmap_path', required=False, type=str, default="./label_map.pbtxt",
                 help='path to the label map')
-    parser.add_argument('--model_path', required=True, type=str,
+    parser.add_argument('--model_path', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model/saved_model.pb",
                         help='path to the saved model folder')
-    parser.add_argument('--tf_record_path', required=True, type=str,
+    parser.add_argument('--tf_record_path', required=False, type=str, default="./data/test/segment-1208303279778032257_1360_000_1380_000_with_camera_labels.tfrecord",
                         help='path to the tf record file')
     parser.add_argument('--config_path', required=False, type=str,
                         default='pipeline.config', 
                         help='path to the config file')
     parser.add_argument('--output_path', required=False, type=str, 
-                        default='animation.mp4', 
+                        default='./data/animation.mp4', 
                         help='path of the saved file')
     args = parser.parse_args()
     main(args.labelmap_path, 
