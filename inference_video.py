@@ -9,7 +9,11 @@ from object_detection.builders.dataset_builder import build as build_dataset
 from object_detection.utils.config_util import get_configs_from_pipeline_file
 from object_detection.utils.label_map_util import create_category_index_from_labelmap
 from object_detection.utils import visualization_utils as viz_utils
-
+from utils import get_module_logger
+import os
+from matplotlib import animation
+import matplotlib
+matplotlib.use('TkAgg')
 
 def main(labelmap_path, model_path, tf_record_path, config_path, output_path):
     """
@@ -23,8 +27,9 @@ def main(labelmap_path, model_path, tf_record_path, config_path, output_path):
 
     Save the results as mp4 file
     """
+    tf_record_path = os.path.abspath(tf_record_path)
     # load label map
-    category_index = create_category_index_from_labelmap(labelmap_path,
+    category_index = create_category_index_from_labelmap(os.path.abspath(labelmap_path),
                                                          use_display_name=True)
 
     # Load saved model and build the detection function
@@ -40,7 +45,7 @@ def main(labelmap_path, model_path, tf_record_path, config_path, output_path):
 
     # update the eval config file
     eval_input_config.tf_record_input_reader.input_path[:] = [tf_record_path]
-    dataset = build_dataset(eval_input_config)
+#     dataset = build_dataset(eval_input_config)
 
     # build dataset
     dataset = build_dataset(eval_input_config)
@@ -91,7 +96,8 @@ def main(labelmap_path, model_path, tf_record_path, config_path, output_path):
         image = images[idx]
         im_obj.set_data(image)
         
-    anim = animation.FuncAnimation(f, animate, frames=198)
+    anim = animation.FuncAnimation(f, animate, frames=len(images))
+#     plt.show()
     anim.save(output_path, fps=5, dpi=300)
 
 
@@ -101,7 +107,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Create video')
     parser.add_argument('--labelmap_path', required=False, type=str, default="./label_map.pbtxt",
                 help='path to the label map')
-    parser.add_argument('--model_path', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model/saved_model.pb",
+    parser.add_argument('--model_path', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model",
                         help='path to the saved model folder')
     parser.add_argument('--tf_record_path', required=False, type=str, default="./data/test/segment-1208303279778032257_1360_000_1380_000_with_camera_labels.tfrecord",
                         help='path to the tf record file')
