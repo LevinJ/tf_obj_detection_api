@@ -39,15 +39,15 @@ def edit(train_dir, eval_dir, batch_size, checkpoint, label_map):
 
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(description='Download and process tf files')
-    parser.add_argument('--train_dir', required=True, type=str,
+    parser.add_argument('--train_dir', required=False, type=str, default="./data/train/",
                         help='training directory')
-    parser.add_argument('--eval_dir', required=True, type=str,
+    parser.add_argument('--eval_dir', required=False, type=str, default="./data/eval/",
                         help='validation or testing directory')
-    parser.add_argument('--batch_size', required=True, type=int,
+    parser.add_argument('--batch_size', required=False, type=int, default= 4,
                         help='number of images in batch')
-    parser.add_argument('--checkpoint', required=True, type=str,
+    parser.add_argument('--checkpoint', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/checkpoint/ckpt-0",
                         help='checkpoint path')   
-    parser.add_argument('--label_map', required=True, type=str,
+    parser.add_argument('--label_map', required=False, type=str, default="./label_map.pbtxt",
                         help='label map path')   
     args = parser.parse_args()
     edit(args.train_dir, args.eval_dir, args.batch_size, 

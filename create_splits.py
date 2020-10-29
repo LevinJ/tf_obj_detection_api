@@ -18,12 +18,12 @@ def split(data_dir):
         - data_dir [str]: data directory, /mnt/data
     """
     # TODO: Implement function
-    training_files = glob.glob(data_dir + '/*.tfrecord')
+    training_files = glob.glob(data_dir + '/processed/*.tfrecord')
     training_files.sort()
     num = len(training_files)
     
     # create the directry
-    for _dir in ["train", "val", "test"]:
+    for _dir in ["train", "eval", "test"]:
         dir_path = "{}/{}".format(data_dir, _dir)
         dir_path = os.path.abspath(dir_path)
         os.makedirs(dir_path, exist_ok=True)
@@ -34,14 +34,14 @@ def split(data_dir):
     for file_path in training_files[start:end]:
         dst_path = "{}/train/{}".format(data_dir, os.path.basename(file_path))
         shutil.move(file_path, dst_path)
-    #split out the val part, 0.1
+    #split out the eval part, 0.1
     start = end
     end = start + int(0.1 * num)
     for file_path in training_files[start:end]:
-        dst_path = "{}/val/{}".format(data_dir, os.path.basename(file_path))
+        dst_path = "{}/eval/{}".format(data_dir, os.path.basename(file_path))
         shutil.move(file_path, dst_path)
     
-    #split out the val part, 0.1
+    #split out the test part, 0.1
     for file_path in training_files[end:]:
         dst_path = "{}/test/{}".format(data_dir, os.path.basename(file_path))
         shutil.move(file_path, dst_path)
@@ -50,7 +50,7 @@ def split(data_dir):
 
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(description='Split data into training / validation / testing')
-    parser.add_argument('--data_dir', required=True,
+    parser.add_argument('--data_dir', required=False, default= "./data",
                         help='data directory')
     args = parser.parse_args()
 
