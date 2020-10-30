@@ -27,9 +27,13 @@ def main(labelmap_path, model_path, tf_record_path, config_path, output_path):
 
     Save the results as mp4 file
     """
+    model_path = os.path.abspath(model_path)
     tf_record_path = os.path.abspath(tf_record_path)
+    labelmap_path = os.path.abspath(labelmap_path)
+    config_path = os.path.abspath(config_path)
+    output_path = os.path.abspath(output_path)
     # load label map
-    category_index = create_category_index_from_labelmap(os.path.abspath(labelmap_path),
+    category_index = create_category_index_from_labelmap(labelmap_path,
                                                          use_display_name=True)
 
     # Load saved model and build the detection function
@@ -105,7 +109,7 @@ if __name__ == "__main__":
     logger = get_module_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Create video')
-    parser.add_argument('--labelmap_path', required=False, type=str, default="./label_map.pbtxt",
+    parser.add_argument('--labelmap_path', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/mscoco_label_map.pbtxt",
                 help='path to the label map')
     parser.add_argument('--model_path', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/saved_model",
                         help='path to the saved model folder')
