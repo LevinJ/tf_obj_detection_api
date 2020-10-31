@@ -99,21 +99,25 @@ import tensorflow.compat.v2 as tf
 from google.protobuf import text_format
 from object_detection import exporter_lib_v2
 from object_detection.protos import pipeline_pb2
+import os
 
 tf.enable_v2_behavior()
 
+pipeline_config_path = os.path.abspath("../training/reference/pipeline_new.config")
+trained_checkpoint_dir = os.path.abspath("../training/reference")
+output_directory = os.path.abspath("../training/reference/exported_model/")
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('input_type', 'image_tensor', 'Type of input node. Can be '
                     'one of [`image_tensor`, `encoded_image_string_tensor`, '
                     '`tf_example`, `float_image_tensor`]')
-flags.DEFINE_string('pipeline_config_path', None,
+flags.DEFINE_string('pipeline_config_path', pipeline_config_path,
                     'Path to a pipeline_pb2.TrainEvalPipelineConfig config '
                     'file.')
-flags.DEFINE_string('trained_checkpoint_dir', None,
+flags.DEFINE_string('trained_checkpoint_dir', trained_checkpoint_dir,
                     'Path to trained checkpoint directory')
-flags.DEFINE_string('output_directory', None, 'Path to write outputs.')
+flags.DEFINE_string('output_directory', output_directory, 'Path to write outputs.')
 flags.DEFINE_string('config_override', '',
                     'pipeline_pb2.TrainEvalPipelineConfig '
                     'text proto to override pipeline_config_path.')
@@ -139,9 +143,9 @@ flags.DEFINE_string('side_input_names', '',
                     'assuming the names will be a comma-separated list of '
                     'strings. This flag is required if using side inputs.')
 
-flags.mark_flag_as_required('pipeline_config_path')
-flags.mark_flag_as_required('trained_checkpoint_dir')
-flags.mark_flag_as_required('output_directory')
+# flags.mark_flag_as_required('pipeline_config_path')
+# flags.mark_flag_as_required('trained_checkpoint_dir')
+# flags.mark_flag_as_required('output_directory')
 
 
 def main(_):
