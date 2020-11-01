@@ -46,10 +46,10 @@ def create_tf_example(filename, encoded_jpeg, annotations):
     
     for index, row in enumerate(annotations):
         
-        xmin = row.box.center_x - row.box.width/2.0
-        xmax = row.box.center_x + row.box.width/2.0
-        ymin = row.box.center_y - row.box.length/2.0
-        ymax = row.box.center_y + row.box.length/2.0
+        xmin = row.box.center_x - row.box.length/2.0
+        xmax = row.box.center_x + row.box.length/2.0
+        ymin = row.box.center_y - row.box.width/2.0
+        ymax = row.box.center_y + row.box.width/2.0
         
          
         xmins.append(xmin / width)

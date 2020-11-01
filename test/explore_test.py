@@ -1,5 +1,7 @@
 from utils import get_dataset
 import cv2
+import matplotlib
+matplotlib.use("TkAgg")
 
 dataset = get_dataset("/home/levin/workspace/carnd/tf_obj_detection_api/data/processed/segment-10017090168044687777_6380_000_6400_000_with_camera_labels.tfrecord",
                       '../label_map.pbtxt')
@@ -23,7 +25,7 @@ def display_instances(batch):
     return 
 import matplotlib.pyplot as plt
 fig=plt.figure()
-rows, columns = 5, 2
+rows, columns = 2, 2
 i = 1
 def display_dataset(dataset):
     dataset = dataset.shuffle(100)
@@ -41,6 +43,8 @@ def display_dataset(dataset):
         print("show image{}".format(i))
         fig.add_subplot(rows, columns, i)
         plt.imshow(img)
+        if i == rows * columns:
+            break
         i = i+ 1
     plt.show()
 #         print("show image")
