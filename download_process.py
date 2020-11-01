@@ -153,15 +153,16 @@ def download_and_process(filename, temp_dir, data_dir):
     local_path = download_tfr(filename, temp_dir)
     process_tfr(local_path, data_dir)
     # remove the original tf record to save space
-    logger.info(f'Deleting {local_path}')
-    os.remove(local_path)
+    if os.path.exists(local_path):
+        logger.info(f'Deleting {local_path}')
+        os.remove(local_path)
 
 
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(description='Download and process tf files')
-    parser.add_argument('--data_dir', required=True,
+    parser.add_argument('--data_dir', required=False, default="./data",
                         help='processed data directory')
-    parser.add_argument('--temp_dir', required=True,
+    parser.add_argument('--temp_dir', required=False, default="./data/temp",
                         help='raw data directory')
     args = parser.parse_args()
     logger = get_module_logger(__name__)

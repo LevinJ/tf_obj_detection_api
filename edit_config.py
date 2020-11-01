@@ -4,6 +4,8 @@ import glob
 import tensorflow.compat.v1 as tf
 from google.protobuf import text_format
 from object_detection.protos import pipeline_pb2
+import os
+import shutil
 
 
 def edit(train_dir, eval_dir, batch_size, checkpoint, label_map):
@@ -16,6 +18,10 @@ def edit(train_dir, eval_dir, batch_size, checkpoint, label_map):
     - checkpoint [str]: path to pretrained model
     - label_map [str]: path to labelmap file
     """
+    train_dir = os.path.abspath(train_dir)
+    eval_dir = os.path.abspath(eval_dir)
+    checkpoint = os.path.abspath(checkpoint)
+    label_map = os.path.abspath(label_map)
     pipeline_config = pipeline_pb2.TrainEvalPipelineConfig() 
     with tf.gfile.GFile("pipeline.config", "r") as f:                                                                                                                                                                                                                     
         proto_str = f.read()                                                                                                                                                                                                                                          
@@ -33,8 +39,11 @@ def edit(train_dir, eval_dir, batch_size, checkpoint, label_map):
     pipeline_config.eval_input_reader[0].tf_record_input_reader.input_path[:] = evaluation_files
 
     config_text = text_format.MessageToString(pipeline_config)             
-    with tf.gfile.Open("pipeline_new.config", "wb") as f:                                                                                                                                                                                                                       
-        f.write(config_text)   
+    with tf.gfile.Open("./pipeline_new.config", "wb") as f:                                                                                                                                                                                                                       
+        f.write(config_text) 
+    dst =  "./training/reference/pipeline_new.config"
+    shutil.copyfile("./pipeline_new.config", dst) 
+    print("copy file {}".format(dst))
 
 
 if __name__ == "__main__": 
