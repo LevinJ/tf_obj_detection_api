@@ -41,7 +41,9 @@ def edit(train_dir, eval_dir, batch_size, checkpoint, label_map):
     config_text = text_format.MessageToString(pipeline_config)             
     with tf.gfile.Open("./pipeline_new.config", "wb") as f:                                                                                                                                                                                                                       
         f.write(config_text) 
+        
     dst =  "./training/reference/pipeline_new.config"
+    os.makedirs("./training/reference", exist_ok=True)
     shutil.copyfile("./pipeline_new.config", dst) 
     print("copy file {}".format(dst))
 
