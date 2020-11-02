@@ -54,10 +54,14 @@ if __name__ == "__main__":
                         help='training directory')
     parser.add_argument('--eval_dir', required=False, type=str, default="./data/eval/",
                         help='validation or testing directory')
-    parser.add_argument('--batch_size', required=False, type=int, default= 4,
+    parser.add_argument('--batch_size', required=False, type=int, default= 2,
                         help='number of images in batch')
-    parser.add_argument('--checkpoint', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/checkpoint/ckpt-0",
-                        help='checkpoint path')   
+    parser.add_argument('--checkpoint', required=False, type=str, default="./training/pretrained-models/ssd_resnet101_v1_fpn_640x640_coco17_tpu-8/checkpoint/ckpt-0",
+                        help='checkpoint path')  
+#     parser.add_argument('--batch_size', required=False, type=int, default= 4,
+#                         help='number of images in batch')
+#     parser.add_argument('--checkpoint', required=False, type=str, default="./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/checkpoint/ckpt-0",
+#                         help='checkpoint path')   
     parser.add_argument('--label_map', required=False, type=str, default="./label_map.pbtxt",
                         help='label map path')   
     args = parser.parse_args()

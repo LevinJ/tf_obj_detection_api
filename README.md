@@ -186,8 +186,6 @@ Based on the reference configuration, four new training strategies are experimen
 
 Per [SSD paper](https://arxiv.org/pdf/1512.02325.pdf), appropriate data augmentation can dramatically improve model accuracy. Reference configuration performs random horizontal flip and typical random crop.  Here we decide to use the data augmentation stragety as introuced in SSD paper, by adding the  ssd_random_crop data augmentation.
 
-2) optimizer
-Reference configuration uses momentum optimzer, here we woul try Adam optimizer, which is found quite efficient in many model training tasks.
 
 3) backbone network
 Reference configuration's backbone network is resnet50. On the other side, one easy way to improve model accuray is to use deeper network, so here we would replace resnet50 by the new ResNet101 
