@@ -131,18 +131,72 @@ python inference_video.py -labelmap_path label_map.pbtxt --model_path training/e
 ## Submission Template
 
 ### Project overview
-This section should contain a brief description of the project and what we are trying to achieve. Why is object detection such an important component of self driving car systems?
+
+In this project, we take advantage of tensorflow object detection API to train a custom object detector. All the training and validation data will be from the [Waymo Open dataset](https://waymo.com/open/). We will walk through the complete pipeline of model training, including dataset analysis, data split, model training, model improvement, model exporting. At the end, we will create  a short video of our model predictions to showcase the result.
+
+
+### Installation
+
+To run the codes developed in this project, tensorflow object detection API are required. Please see the README file in the build folder on instructions about how to set up the environment.
 
 ### Dataset
 #### Dataset analysis
-This section should contain a quantitative and qualitative description of the dataset. It should include images, charts and other visualizations.
+
+In `Exploratory Data Analysis` notebook, we displaye typical images and corresponding annotations in the Waymo dataset.  When plotting bounding boxes, different classes are color coded.
+
+The codes for displaying images are as below,
+
+```
+```
+
+After displaying random images from several tf record files, we can observe:
+
+1) All the images are recorded in urban environment.
+2) Object classes include vehicle,pedestrian, and cyclist. The number of vehicle object in images are much more than the other two. A more disciplined method to find out class distribution within the dataset is to use scripts to transverse all the imagesd and calculate relevant statistics.
+
 #### Cross validation
-This section should detail the cross validation strategy and justify your approach.
+
+In `create_splits` script, dataset are split into train, and eval, and test, whose ratios are 0.9, 0.1, 0.1 specifically.
+
+The train split is used to train the model, the eval split helps us decide when to stop the training, as we want the model to fit the training data well but we also don't want it to overfit the trainig data.  The test split is used to test the model's accuracy.
+
+The ratios used in splitting dataset is mainly based on past experience. As we utilized transfer learning to bootstap the model training, the number of training examples don't have to be huge.
 
 ### Training 
 #### Reference experiment
-This section should detail the results of the reference experiment. It should includes training metrics and a detailed explanation of the algorithm's performances.
+
+With the reference configuration provided in project starter code, we trained and evaluated the model. Tensorboard is a great tool that can help us gain insight into the training pocess.
+
+
+1) Total loss charts
+
+2) image chart
+
+
+
+
+
+
 
 #### Improve on the reference
-This section should highlight the different strategies you adopted to improve your model. It should contain relevant figures and details of your findings.
+
+Based on the reference configuration, four new training strategies are experimented in an attempt to further improve the model.
+
+1) augmentation method
+
+Per [SSD paper](https://arxiv.org/pdf/1512.02325.pdf), appropriate data augmentation can dramatically improve model accuracy. Reference configuration performs random horizontal flip and typical random crop.  Here we decide to use the data augmentation stragety as introuced in SSD paper, by adding the  ssd_random_crop data augmentation.
+
+2) optimizer
+Reference configuration uses momentum optimzer, here we woul try Adam optimizer, which is found quite efficient in many model training tasks.
+
+3) backbone network
+Reference configuration's backbone network is resnet50. On the other side, one easy way to improve model accuray is to use deeper network, so here we would replace resnet50 by the new ResNet101 
+
+4) traing iterations
+
+The new data augmentation adds more image variability, and the new backbone network has more model parameters, to make sure the model are sufficiently training, we extend the training iterations from 25000 steps to 30000 steps.
+
+
+
+### Reflection
  
