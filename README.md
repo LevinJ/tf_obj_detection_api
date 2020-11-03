@@ -250,7 +250,7 @@ Apart from precision, the other metrics of model evaluation is recall rate. The 
 
 After the model training completes, we can export the trained model to get a more compact inference model. Exporting model can be achieved by `python experiments/exporter_main_v2.py`. 
 
-Finally we generate the animation video on model prediction by `python inference_video.py`. The resultant video is under `videos` folder, The video file name is `animation_reference.mp4`
+Finally we generate the animation video on model prediction by `python inference_video.py`. The resultant video is under `video` folder, The video file name is `animation_reference.mp4`
 
 
 
@@ -301,7 +301,7 @@ With tensorboard, we can see the loss charts.
 ![loss chart](./images/2_loss.png)
 
 
-The resultant video is under `videos` folder, the video file name is `animation_improved.mp4`
+The resultant video is under `video` folder, and the video file name is `animation_improved.mp4`
  
 
 ## Reflection
