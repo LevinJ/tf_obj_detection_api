@@ -4,10 +4,16 @@
 
 In this project, we take advantage of tensorflow object detection API to train a custom object detector. All the training and validation data will be from the [Waymo Open dataset](https://waymo.com/open/). We will walk through the complete pipeline of model training, including dataset analysis, data split, model training, model improvement, and model export. At the end, we will create  a short video of our model predictions to showcase the result.
 
+The project resides in github, and the link is [here](https://github.com/LevinJ/tf_obj_detection_api)
+
 
 ## Source code structure
 
 The files in this project are organized as follows:
+
+Video folder stores resultant prediction videos for both reference model and improved model.
+
+Script files under direct project folder:
 
 * download_process.py: download [Waymo Open dataset](https://waymo.com/open/) from [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_2_0_individual_files/)
 * create_splits.py: create the train/eval/test data split
@@ -23,23 +29,19 @@ For all of the above python scripts, we've modified the parameters parsing secti
 python download_process.py
 ``` 
 
-experiments folder store train/eval script and the export script: 
-* exporter_main_v2.py: train or evaluate the model, depending on input parameters  
-* exporter_main_v2.py: convert the trained model to more compact inference model  
+experiments folder store train/eval script and the export script:    
+* exporter_main_v2.py: train or evaluate the model, depending on input parameters     
+* exporter_main_v2.py: convert the trained model to more compact inference model     
 
-data folder stores images and annotatons
-    - processed: contained the tf records in the Tf Object detection api format. (NOTE: this folder should be empty after creating the splits)
-    - test: contain the test data
-    - train: contain the train data
-    - val: contain the val data
-
-
-Video folder stores resultant prediction videos for both reference model and improved model.
-
+data folder stores images and annotatons    
+* processed: contained the tf records in the Tf Object detection api format. (NOTE: this folder should be empty after creating the splits)    
+* test: contain the test data    
+* train: contain the train data   
+* val: contain the val data     
 
 ## Installation
 
-To run the codes developed in this project, tensorflow object detection API are required. Please see the README file in the build folder for how to set up the environment.
+To run the codes developed in this project, tensorflow object detection API is required. Please see the README file in the build folder for how to set up the environment.
 
 ## Dataset
 
@@ -125,7 +127,7 @@ The codes for displaying images are as below,
 def draw_detections(img, boxes, classes, i):
     f, ax = plt.subplots(1, figsize=(10, 10))
     ax.imshow(img.astype(np.uint8))
-    **#color for each categroy,**
+    #color for each categroy
     color_dict = {1: 'r', 2: 'b', 4:'g'}
     for box,box_class in zip(boxes, classes):
         y1, x1, y2, x2  = box
@@ -160,7 +162,7 @@ def display_instances(batch):
 After displaying random images from several tf record files, we can observe:
 
 1) All the images are recorded in urban environment.   
-2) Object classes include vehicle,pedestrian, and cyclist. The number of vehicle objects in images are much more than the other two. A more disciplined method to find out class distribution within the dataset is to write a small script to transverse all the images and calculate relevant statistics.  
+2) Object classes include vehicle,pedestrian, and cyclist. The number of vehicle objects in images are much larger than the other two. A more disciplined method to find out class distribution within the dataset is to write a small script to transverse all the images and calculate relevant statistics.  
 
 ### Cross validation
 
