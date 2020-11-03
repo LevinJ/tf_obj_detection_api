@@ -1,200 +1,329 @@
 # Object detection in an Urban Environment
 
-## Data
+## Project overview
 
-For this project, we will be using data from the [Waymo Open dataset](https://waymo.com/open/). The files can be downloaded directly from the website as tar files or from the [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_2_0_individual_files/) as individual tf records. 
+In this project, we take advantage of tensorflow object detection API to train a custom object detector. All the training and validation data will be from the [Waymo Open dataset](https://waymo.com/open/). We will walk through the complete pipeline of model training, including dataset analysis, data split, model training, model improvement, and model export. At the end, we will create  a short video of our model predictions to showcase the result.
 
-## Structure
+The project resides in github, and the link is [here](https://github.com/LevinJ/tf_obj_detection_api)
 
-The data in the classroom workspace will be organized as follows:
+
+## Source code structure
+
+The files in this project are organized as follows:
+
+Video folder stores resultant prediction videos for both reference model and improved model.
+
+Script files under direct project folder:
+
+* download_process.py: download [Waymo Open dataset](https://waymo.com/open/) from [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_2_0_individual_files/)
+* create_splits.py: create the train/eval/test data split
+* edit_config.py: generate model training configuration files
+* Exploratory Data Analysis.ipynb: visualize image and ground truth annotations, and help with dataset analysis
+* Explore augmentations.ipynb: explore different augmentation methods
+* filenames.txt: list tf record files to be downloaded
+* inference_video.py: create animation video
+
+For all of the above python scripts, we've modified the parameters parsing section so that the scripts can run well with default values. This means we don't have to append parameters when running the scipts. For example, to download the dataset, just go to the project folder, and then run below command,
+
 ```
-/home/backups/
-    - raw: contained the tf records in the Waymo Open format. (NOTE: this folder only contains temporary files and should be empty after running the download and process script)
+python download_process.py
+``` 
 
-/home/workspace/data/
-    - processed: contained the tf records in the Tf Object detection api format. (NOTE: this folder should be empty after creating the splits)
-    - test: contain the test data
-    - train: contain the train data
-    - val: contain the val data
+experiments folder store train/eval script and the export script:    
+* exporter_main_v2.py: train or evaluate the model, depending on input parameters     
+* exporter_main_v2.py: convert the trained model to more compact inference model     
+
+data folder stores images and annotatons    
+* processed: contained the tf records in the Tf Object detection api format. (NOTE: this folder should be empty after creating the splits)    
+* test: contain the test data    
+* train: contain the train data   
+* val: contain the val data     
+
+## Installation
+
+To run the codes developed in this project, tensorflow object detection API is required. Please see the README file in the build folder for how to set up the environment.
+
+## Dataset
+
+### Data download
+
+The first goal of this project is to download the data from the Waymo's Google Cloud bucket to local machine. For this project, we only need a subset of the data provided (for example, we do not need to use the Lidar data). Therefore, we are going to download and trim immediately each file. 
+
+`create_tf_example` function takes the components of a Waymo Tf record and save them in the Tf Object Detection api format. Its implementation is as below,
+
 ```
+def create_tf_example(filename, encoded_jpeg, annotations):
+    """
+    This function create a tf.train.Example from the Waymo frame.
 
-The experiments folder will be organized as follow:
-```
-experiments/
-    - exporter_main_v2.py: to create an inference model
-    - model_main_tf2.py: to launch training
-    - experiment0/....
-    - experiment1/....
-    - experiment2/...
-    - pretrained-models/: contains the checkpoints of the pretrained models.
-```
+    args:
+        - filename [str]: name of the image
+        - encoded_jpeg [bytes]: jpeg encoded image
+        - annotations [protobuf object]: bboxes and classes
 
-## Prerequisites
+    returns:
+        - tf_example [tf.Train.Example]: tf example in the objection detection api format.
+    """
 
-### Local Setup
+    encoded_jpg_io = io.BytesIO(encoded_jpeg)
+    image = Image.open(encoded_jpg_io)
+    width, height = image.size
+    
+    image_format = b'jpeg'
+    
+    xmins = []
+    xmaxs = []
+    ymins = []
+    ymaxs = []
+    classes_text = []
+    classes = []
+    
+    for index, row in enumerate(annotations):
+        
+        xmin = row.box.center_x - row.box.length/2.0
+        xmax = row.box.center_x + row.box.length/2.0
+        ymin = row.box.center_y - row.box.width/2.0
+        ymax = row.box.center_y + row.box.width/2.0
+        
+         
+        xmins.append(xmin / width)
+        xmaxs.append(xmax / width)
+        ymins.append(ymin / height)
+        ymaxs.append(ymax / height)
+        classes_text.append(class_text_to_int(row.type).encode('utf8'))
+        classes.append(row.type)
 
-For local setup if you have your own Nvidia GPU, you can use the provided Dockerfile and requirements in the [build directory](./build).
-
-Follow [the README therein](./build/README.md) to create a docker container and install all prerequisites.
-
-### Classroom Workspace
-
-In the classroom workspace, every library and package should already be installed in your environment. However, you will need to login to Google Cloud using the following command:
-```
-gcloud auth login
-```
-This command will display a link that you need to copy and paste to your web browser. Follow the instructions. You can check if you are logged correctly by running :
-```
-gsutil ls gs://waymo_open_dataset_v_1_2_0_individual_files/
-```
-It should display the content of the bucket.
-
-## Instructions
-
-### Download and process the data
-
-The first goal of this project is to download the data from the Waymo's Google Cloud bucket to your local machine. For this project, we only need a subset of the data provided (for example, we do not need to use the Lidar data). Therefore, we are going to download and trim immediately each file. In `download_process.py`, you will need to implement the `create_tf_example` function. This function takes the components of a Waymo Tf record and save them in the Tf Object Detection api format. An example of such function is described [here](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#create-tensorflow-records). We are already providing the `label_map.pbtxt` file. 
-
-Once you have coded the function, you can run the script at using
-```
-python download_process.py --data_dir /home/workspace/data/ --temp_dir /home/backups/
-```
-
-You are downloading XX files so be patient! Once the script is done, you can look inside the `/home/workspace/data/processed` folder to see if the files have been downloaded and processed correctly.
-
-
-### Exploratory Data Analysis
-
-Now that you have downloaded and processed the data, you should explore the dataset! This is the most important task of any machine learning project. To do so, open the `Exploratory Data Analysis` notebook. In this notebook, your first task will be to implement a `display_instances` function to display images and annotations using `matplotlib`. This should be very similar to the function you created during the course. Once you are done, feel free to spend more time exploring the data and report your findings. Report anything relevant about the dataset in the writeup.
-
-Keep in mind that you should refer to this analysis to create the different spits (training, testing and validation). 
-
-
-### Create the splits
-
-Now you have become one with the data! Congratulations! How will you use this knowledge to create the different splits: training, validation and testing. There are no single answer to this question but you will need to justify your choice in your submission. You will need to implement the `split_data` function in the `create_splits.py` file. Once you have implemented this function, run it using:
-```
-python create_splits.py --data_dir /home/workspace/data/
-```
-
-NOTE: Keep in mind that your storage is limited. The files should be <ins>moved</ins> and not copied. 
-
-### Edit the config file
-
-Now you are ready for training. As we explain during the course, the Tf Object Detection API relies on **config files**. The config that we will use for this project is `pipeline.config`, which is the config for a SSD Resnet 50 640x640 model. You can learn more about the Single Shot Detector [here](https://arxiv.org/pdf/1512.02325.pdf). 
-
-First, let's download the [pretrained model](http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz) and move it to `training/pretrained-models/`. 
-
-Now we need to edit the config files to change the location of the training and validation files, as well as the location of the label_map file, pretrained weights. We also need to adjust the batch size. To do so, run the following:
-```
-python edit_config.py --train_dir /home/workspace/data/train/ --eval_dir /home/workspace/data/val/ --batch_size 4 --checkpoint ./training/pretrained-models/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8/checkpoint/ckpt-0 --label_map label_map.pbtxt
-```
-A new config file has been created, `pipeline_new.config`.
-
-### Training
-
-You will now launch your very first experiment with the Tensorflow object detection API. Create a folder `training/reference`. Move the `pipeline_new.config` to this folder. You will now have to launch two processes: 
-* a training process:
-```
-python model_main_tf2.py --model_dir=training/reference/ --pipeline_config_path=training/reference/pipeline_new.config
-```
-* an evaluation process:
-```
-python model_main_tf2.py --model_dir=training/reference/ --pipeline_config_path=training/reference/pipeline_new.config --checkpoint_dir=training/reference/
-```
-
-NOTE: both processes will display some Tensorflow warnings.
-
-To monitor the training, you can launch a tensorboard instance by running `tensorboard --logdir=training`. You will report your findings in the writeup. 
-
-### Improve the performances
-
-Most likely, this initial experiment did not yield optimal results. However, you can make multiple changes to the config file to improve this model. One obvious change consists in improving the data augmentation strategy. The [`preprocessor.proto`](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto) file contains the different data augmentation method available in the Tf Object Detection API. To help you visualize these augmentations, we are providing a notebook: `Explore augmentations.ipynb`. Using this notebook, try different data augmentation combinations and select the one you think is optimal for our dataset. Justify your choices in the writeup. 
-
-Keep in mind that the following are also available:
-* experiment with the optimizer: type of optimizer, learning rate, scheduler etc
-* experiment with the architecture. The Tf Object Detection API [model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md) offers many architectures. Keep in mind that the `pipeline.config` file is unique for each architecture and you will have to edit it. 
-
-
-### Creating an animation
-#### Export the trained model
-Modify the arguments of the following function to adjust it to your models:
-```
-python .\exporter_main_v2.py --input_type image_tensor --pipeline_config_path training/experiment0/pipeline.config --trained_checkpoint_dir training/experiment0/ckpt-50 --output_directory training/experiment0/exported_model/
+    filename = filename.encode('utf8')
+    tf_example = tf.train.Example(features=tf.train.Features(feature={
+        'image/height': int64_feature(height),
+        'image/width': int64_feature(width),
+        'image/filename': bytes_feature(filename),
+        'image/source_id': bytes_feature(filename),
+        'image/encoded': bytes_feature(encoded_jpeg),
+        'image/format': bytes_feature(image_format),
+        'image/object/bbox/xmin': float_list_feature(xmins),
+        'image/object/bbox/xmax': float_list_feature(xmaxs),
+        'image/object/bbox/ymin': float_list_feature(ymins),
+        'image/object/bbox/ymax': float_list_feature(ymaxs),
+        'image/object/class/text': bytes_list_feature(classes_text),
+        'image/object/class/label': int64_list_feature(classes),
+    }))
+    return tf_example
 ```
 
-Finally, you can create a video of your model's inferences for any tf record file. To do so, run the following command (modify it to your files):
-```
-python inference_video.py -labelmap_path label_map.pbtxt --model_path training/experiment0/exported_model/saved_model --tf_record_path /home/workspace/data/test/tf.record --config_path training/experiment0/pipeline_new.config --output_path animation.mp4
-```
 
-## Submission Template
+### Dataset analysis
 
-### Project overview
+In `Exploratory Data Analysis` notebook, we display images and corresponding annotations in the Waymo dataset.  When plotting bounding boxes, different classes are color coded, like below
 
-In this project, we take advantage of tensorflow object detection API to train a custom object detector. All the training and validation data will be from the [Waymo Open dataset](https://waymo.com/open/). We will walk through the complete pipeline of model training, including dataset analysis, data split, model training, model improvement, model exporting. At the end, we will create  a short video of our model predictions to showcase the result.
+![dataset analysis](./images/aug__final.png)
 
-
-### Installation
-
-To run the codes developed in this project, tensorflow object detection API are required. Please see the README file in the build folder on instructions about how to set up the environment.
-
-### Dataset
-#### Dataset analysis
-
-In `Exploratory Data Analysis` notebook, we displaye typical images and corresponding annotations in the Waymo dataset.  When plotting bounding boxes, different classes are color coded.
+You can also run the notebook to see more similar image display.
 
 The codes for displaying images are as below,
 
 ```
+#draw groud truth bounding boxes on an image
+def draw_detections(img, boxes, classes, i):
+    f, ax = plt.subplots(1, figsize=(10, 10))
+    ax.imshow(img.astype(np.uint8))
+    #color for each categroy
+    color_dict = {1: 'r', 2: 'b', 4:'g'}
+    for box,box_class in zip(boxes, classes):
+        y1, x1, y2, x2  = box
+        rec = Rectangle((x1, y1), x2-x1, y2-y1, facecolor='none', edgecolor=color_dict[box_class], linewidth=2)
+        ax.add_patch(rec)
+    plt.title(f'Image {i}')
+    plt.xlabel('width (pixel)', fontsize=18)
+    plt.ylabel('height (pixel)', fontsize=16)
+    plt.show()
+    return
+
+i = 1
+def display_instances(batch):
+    """
+    This function takes a batch from the dataset and display the image with 
+    the associated bounding boxes.
+    """
+    # ADD CODE HERE
+    global i
+    plt.figure()
+    img  = batch['image'].numpy()
+    h, w, _c = img.shape 
+    boxes = batch['groundtruth_boxes'].numpy()
+    boxes[:,(0,2)] *= h
+    boxes[:,(1,3)] *= w
+    classes = batch['groundtruth_classes'].numpy()
+    draw_detections(img.copy(), boxes, classes, i)
+    i = i+ 1
+    return
 ```
 
 After displaying random images from several tf record files, we can observe:
 
-1) All the images are recorded in urban environment.
-2) Object classes include vehicle,pedestrian, and cyclist. The number of vehicle object in images are much more than the other two. A more disciplined method to find out class distribution within the dataset is to use scripts to transverse all the imagesd and calculate relevant statistics.
+1) All the images are recorded in urban environment.   
+2) Object classes include vehicle,pedestrian, and cyclist. The number of vehicle objects in images are much larger than the other two. A more disciplined method to find out class distribution within the dataset is to write a small script to transverse all the images and calculate relevant statistics.  
 
-#### Cross validation
+### Cross validation
 
-In `create_splits` script, dataset are split into train, and eval, and test, whose ratios are 0.9, 0.1, 0.1 specifically.
+In `create_splits.py` script, dataset are split into train, and eval, and test, whose ratios are set as 0.8, 0.1, 0.1 respectively.
 
-The train split is used to train the model, the eval split helps us decide when to stop the training, as we want the model to fit the training data well but we also don't want it to overfit the trainig data.  The test split is used to test the model's accuracy.
+The train split is used to train the model, the eval split helps us decide when to stop the training, as we want the model to fit the training data well but we also don't want it to overfit the trainig data. The test split is used to test the model's accuracy.
 
 The ratios used in splitting dataset is mainly based on past experience. As we utilized transfer learning to bootstap the model training, the number of training examples don't have to be huge.
 
-### Training 
-#### Reference experiment
+Codes for data split are mainly done in below function,
 
-With the reference configuration provided in project starter code, we trained and evaluated the model. Tensorboard is a great tool that can help us gain insight into the training pocess.
+```
+def split(data_dir):
+    """
+    Create three splits from the processed records. The files should be moved to new folders in the 
+    same directory. This folder should be named train, val and test.
+
+    args:
+        - data_dir [str]: data directory, /mnt/data
+    """
+    training_files = glob.glob(data_dir + '/processed/*.tfrecord')
+    training_files.sort()
+    num = len(training_files)
+    
+    # create the directry
+    for _dir in ["train", "eval", "test"]:
+        dir_path = "{}/{}".format(data_dir, _dir)
+        dir_path = os.path.abspath(dir_path)
+        os.makedirs(dir_path, exist_ok=True)
+    
+    #split out the training part, 0.8
+    start = 0
+    end = start + int(0.8 * num)
+    for file_path in training_files[start:end]:
+        dst_path = "{}/train/{}".format(data_dir, os.path.basename(file_path))
+        shutil.move(file_path, dst_path)
+    #split out the eval part, 0.1
+    start = end
+    end = start + int(0.1 * num)
+    for file_path in training_files[start:end]:
+        dst_path = "{}/eval/{}".format(data_dir, os.path.basename(file_path))
+        shutil.move(file_path, dst_path)
+    
+    #split out the test part, 0.1
+    for file_path in training_files[end:]:
+        dst_path = "{}/test/{}".format(data_dir, os.path.basename(file_path))
+        shutil.move(file_path, dst_path)
+    return
+```
+
+## Training 
+### Reference experiment
+
+With the reference configuration provided in project starter code, we trained and evaluated the model. Below are the steps to follow:
+
+1) To train the model, run `python experiments/model_main_tf2.py --model_dir=training/reference/ --pipeline_config_path=training/reference/pipeline_new.config` in the terminal.   
+2) To evaluate the model while it's being trained, run `CUDA_VISIBLE_DEVICES=""  python  ./experiments/model_main_tf2.py --model_dir=training/reference/ --pipeline_config_path=training/reference/pipeline_new.config --checkpoint_dir=training/reference/`   
+3) To monitor the training progress, run `tensorboard --logdir="training/reference`   
 
 
-1) Total loss charts
+Tensorboard is a great tool that can help us monitor and analyze the training pocess. We'll look into a few major charts provided in tensorboard.
 
-2) image chart
-
-
+1) Loss charts
 
 
+The Loss charts show the loss changes during the training process, on both training dataset and evaluation dataset. From the chart, we can see that both training loss and evaluation loss keep descreasing as the training goes on, and evaluation loss is slightly higher than trinig loss, which is what we expect. 
+
+Also the loss curve does not really plateau near the end, indicating that we could probably get better model accuracy by training a bit longer.
+
+![loss charts](./images/1_loss.png)
+
+
+2) Precision charts
+
+Precision charts show the precision change on evalation dataset. From the chart, we can see that our model does a better job on larger object detection.
+
+![precision charts](./images/1_precision.png)
+
+3) Recall charts
+
+Apart from precision, the other metrics of model evaluation is recall rate. The charts are as below,
+
+![recall charts](./images/1_recall.png)
+
+
+After the model training completes, we can export the trained model to get a more compact inference model. Exporting model can be achieved by `python experiments/exporter_main_v2.py`. 
+
+Finally we generate the animation video on model prediction by `python inference_video.py`. The resultant video is under `videos` folder, The video file name is `animation_reference.mp4`
 
 
 
-#### Improve on the reference
+### Improve on the reference
 
-Based on the reference configuration, four new training strategies are experimented in an attempt to further improve the model.
+Based on the reference configuration, five new training strategies are explored in an attempt to further improve the model.
 
 1) augmentation method
 
-Per [SSD paper](https://arxiv.org/pdf/1512.02325.pdf), appropriate data augmentation can dramatically improve model accuracy. Reference configuration performs random horizontal flip and typical random crop.  Here we decide to use the data augmentation stragety as introuced in SSD paper, by adding the  ssd_random_crop data augmentation.
+Per [SSD paper](https://arxiv.org/pdf/1512.02325.pdf), appropriate data augmentation can dramatically improve model accuracy. Reference configuration performs random horizontal flip and typical random crop. Here we decide to try the ssd_random_crop data augmentation, the image cropping method used in SSD original paper.
+
+More implementation details about ssd_random_crop data augmentation can be found in [preprocessor.proto](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto)
+
+With the `Explore augmentations.ipynb`notebook, we can visualize the image augmentation result.
 
 
-3) backbone network
-Reference configuration's backbone network is resnet50. On the other side, one easy way to improve model accuray is to use deeper network, so here we would replace resnet50 by the new ResNet101 
+![augmentation visualization 1](./images/new_augmentation_1.png)
 
-4) traing iterations
+![augmentation visualization 2](./images/new_aug_2.png)
 
-The new data augmentation adds more image variability, and the new backbone network has more model parameters, to make sure the model are sufficiently training, we extend the training iterations from 25000 steps to 30000 steps.
-
+![augmentation visualization 3](./images/new_agu4.png)
 
 
-### Reflection
+2) backbone network
+Reference configuration's backbone network is resnet50. On the other side, one easy way to improve model accuray is to use deeper networks, so here we would replace resnet50 by the ResNet101 
+
+The pretrained model can be downloaded from [Tf Object Detection API model zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md)
+
+3) learning rate
+
+With the newly introduced backbone network resnet101, we find that the training quickly diverge right after it starts. So learning rate is lowered to avoid this probem.
+
+4) batch size
+
+It turns out that training resnet101 requires more GPU memtory than my GPU can afford (out of memory error), so we reduce the batch size from 4 to 2.
+
+5) training iterations
+
+The new data augmentation adds more image variability, and the new backbone network has more model parameters, to make sure the model are sufficiently trained, we extend the training iterations from 25000 steps to 30000 steps.
+
+
+Below image summarizes configuration changes mentioned above
+
+![configuration changes](./images/config_change.png)
+
+With tensorboard, we can see the loss charts. 
+
+![loss chart](./images/2_loss.png)
+
+
+The resultant video is under `videos` folder, the video file name is `animation_improved.mp4`
+ 
+
+## Reflection
+
+This is definitely a fun project, the most interesing part (and time consuming as well) is to fine tune the model and relevant training parameters. Going forward, I think below aspects of the project are worth further exploring:
+
+1) Optimizer
+
+From the loss charts, we can observe that the loss are relatively high, and does not pleatau near the end. we could have the model better trained by trying below methods,
+
+* different optimizer, like Adam
+* increase training iterations
+* different learning rate
+
+2) Lightweight models
+
+It could be fun to try with more lightweight models like mobilenet so that we can run predictions on mobiles.
+
+3) Training time
+
+Currently training takes quite some time, about 6 hours on my GeForce GTX 1080. As we start from pre-trained COCO weights, the early layers are already trained to extract low-level features and we can benefit from that, especially when Waymo images are also natural images like the ones in COCO. Consequently, we can try training only a subset of layers (like the head layers), as opposed to all alyers, which is expected to quicken the training process.
+
+
+
  

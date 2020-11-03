@@ -58,8 +58,7 @@ def create_tf_example(filename, encoded_jpeg, annotations):
         ymaxs.append(ymax / height)
         classes_text.append(class_text_to_int(row.type).encode('utf8'))
         classes.append(row.type)
-#         classes_text.append(row['class'].encode('utf8'))
-#         classes.append(class_text_to_int(row['class']))
+
     filename = filename.encode('utf8')
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': int64_feature(height),

@@ -17,7 +17,6 @@ def split(data_dir):
     args:
         - data_dir [str]: data directory, /mnt/data
     """
-    # TODO: Implement function
     training_files = glob.glob(data_dir + '/processed/*.tfrecord')
     training_files.sort()
     num = len(training_files)
