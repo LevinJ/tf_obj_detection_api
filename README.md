@@ -183,7 +183,7 @@ In `create_splits.py` script, dataset are split into train, and eval, and test, 
 Specifically speaking, below is the data splitting steps:
 
 1) Shuffle the whole dataset   
-The intent behind this step is to make sure that the three splits we obtain later on have similar scenarios, for example, they all have urban and highway scenario. The validation performance of the trained model is expected to be poor if the trainig and validation scenarios are very different.   
+The intent behind this step is to make sure that the three splits we obtain later on have similar scenarios, for example, they all have urban and highway scenario. The validation performance of the trained model is expected to be poor if the training and validation scenarios are very different.   
 2) Split the dataset into train, eval and test    
 The train split is used to train the model, the eval split helps us decide when to stop the training, as we want the model to fit the training data well but we also don't want it to overfit. The test split is used to test the model's accuracy.   
 3) Make sure train/eval/test splits have appropirate ratios.   
