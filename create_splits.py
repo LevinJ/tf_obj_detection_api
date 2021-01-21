@@ -7,6 +7,7 @@ import numpy as np
 import shutil
 
 from utils import get_module_logger
+from random import shuffle
 
 
 def split(data_dir):
@@ -18,7 +19,7 @@ def split(data_dir):
         - data_dir [str]: data directory, /mnt/data
     """
     training_files = glob.glob(data_dir + '/processed/*.tfrecord')
-    training_files.sort()
+    shuffle(training_files)
     num = len(training_files)
     
     # create the directry

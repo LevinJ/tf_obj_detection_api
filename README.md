@@ -16,6 +16,7 @@ Video folder stores resultant prediction videos for both reference model and imp
 Script files under direct project folder:
 
 * download_process.py: download [Waymo Open dataset](https://waymo.com/open/) from [Google Cloud Bucket](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_2_0_individual_files/)
+* eda.py: transverse the dataset and draw EDA charts
 * create_splits.py: create the train/eval/test data split
 * edit_config.py: generate model training configuration files
 * Exploratory Data Analysis.ipynb: visualize image and ground truth annotations, and help with dataset analysis
@@ -162,15 +163,32 @@ def display_instances(batch):
 After displaying random images from several tf record files, we can observe:
 
 1) All the images are recorded in urban environment.   
-2) Object classes include vehicle,pedestrian, and cyclist. The number of vehicle objects in images are much larger than the other two. A more disciplined method to find out class distribution within the dataset is to write a small script to transverse all the images and calculate relevant statistics.  
+2) Object classes include vehicle,pedestrian, and cyclist. 
 
-### Cross validation
+We also wrote a small python script "eda.py" to gain more understanding about the dataset.
+
+![EDA charts](./images/EDA_charts.png)
+
+We can observe a few interesing points from the above charts.
+
+* The number of vehicle objects in images are much larger than the other two.   
+* For some of the images, the number of labelled objects are quite large (more than 30)  
+* Some of the labelled objects are outside of image boundary (bounding box height is larger than image height)  
+ 
+
+### Data splits
 
 In `create_splits.py` script, dataset are split into train, and eval, and test, whose ratios are set as 0.8, 0.1, 0.1 respectively.
 
-The train split is used to train the model, the eval split helps us decide when to stop the training, as we want the model to fit the training data well but we also don't want it to overfit the trainig data. The test split is used to test the model's accuracy.
+Specifically speaking, below is the data splitting steps:
 
-The ratios used in splitting dataset is mainly based on past experience. As we utilized transfer learning to bootstap the model training, the number of training examples don't have to be huge.
+1) Shuffle the whole dataset   
+The intent behind this step is to make sure that the three splits we obtain later on have similar scenarios, for example, they all have urban and highway scenario. The validation performance of the trained model is expected to be poor if the trainig and validation scenarios are very different.   
+2) Split the dataset into train, eval and test    
+The train split is used to train the model, the eval split helps us decide when to stop the training, as we want the model to fit the training data well but we also don't want it to overfit. The test split is used to test the model's accuracy.   
+3) Make sure train/eval/test splits have appropirate ratios.   
+With insufficent training data, the model is likely to overfit; on the other side, with insufficent eval/test data, we may not be able to get an accurate estimate of the model's accuracy due to lack of test samples. As a result, we need to strike a right balance with respect to  ratio split. The ratios used in splitting dataset is mainly based on past experience. In this project, we adopted a commonly occurring ratio in machine learning community, the ratio we used for train/eval/test is 0.8, 0.1, 0.1.  
+
 
 Codes for data split are mainly done in below function,
 
@@ -184,7 +202,7 @@ def split(data_dir):
         - data_dir [str]: data directory, /mnt/data
     """
     training_files = glob.glob(data_dir + '/processed/*.tfrecord')
-    training_files.sort()
+    shuffle(training_files)
     num = len(training_files)
     
     # create the directry
