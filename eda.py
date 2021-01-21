@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import glob
 from object_detection.protos import input_reader_pb2
 from object_detection.builders.dataset_builder import build as build_dataset
-# from utils import get_dataset
 
 
 class App():
@@ -85,7 +84,6 @@ class App():
     
   
     def run(self):
-#         self.process_file('./data/train')
         tf_record_files = []
         for data_folder in ["train", "eval", "test"]:
             data_files = glob.glob('./data/{}/*.tfrecord'.format(data_folder))
@@ -94,9 +92,6 @@ class App():
         tf_dataset= self.get_dataset(tf_record_files)
         self.process_file(tf_dataset)
         self.plt_charts()
-#         for file_path in training_files:
-#             print("processig file {}".format(file_path))
-#             self.process_file(file_path)
         
         
         
